@@ -1,12 +1,12 @@
 // "extern crate foo" - pull in crates plus our module
-extern crate postgres;
 extern crate clap;
+extern crate postgres;
 
 use clap::App;
 mod utils;
+mod db;
 
 // "use"" is just a namespace thing - we don't need it for our module
-use postgres::{Connection, TlsMode};
 fn main() {
     // 1. Get args - playlist file, name of playlist to store online, whether we are updating an existing playlist
     //     (future - concept of user and whether this user owns the playlist if it is being replaced)
@@ -23,6 +23,19 @@ fn main() {
                     .get_matches();
     let app_options = utils::process_args(&matches);
     println!("{:?}", app_options);
+
+    db::test_connection();
+    let playlist = vec![
+        "/opt/gulfport/mp3/ripped/James_Newton_Howard_-_San_Francisco.mp3".to_string(), 
+        "/opt/gulfport/mp3/vartmpnapshare/Amy Winehouse - What It Is About Men.mp3".to_string(),
+        "/opt/gulfport/mp3/vartmpnapshare/Billy Currington - 06 - Where The Girls Are.mp3".to_string(),
+        "/opt/gulfport/mp3/vartmpnapshare/D12 _ Eminem - Purple Pills.mp3".to_string(),
+        "/opt/gulfport/mp3/vartmpnapshare/Jennifer Lopez - Ain't It Funny.mp3".to_string()
+    ];
+    let result = db::get_songs(playlist);
+    for song in result {
+        println!("{:?}", song);
+    }
     // 2. Read playlist
     // 3. Open db and find songs in playlist in db (by path)
     // 4. Report on number of playlist songs matching db
@@ -30,12 +43,5 @@ fn main() {
     // 6. Save entry in playlist table
     // 7. Save playlist songs
 
-    let conn = Connection::connect("postgresql://web@192.168.0.4/maindb", TlsMode::None).unwrap();
-    
-    for row in &conn.query("SELECT count(*) FROM mp3s_tags", &[]).unwrap() {
-        // Conversion(WrongType(Int8)) error I got at the start means the below is looking for 8 bytes, or i64!
-        let cnt: i64 = row.get(0);
-        println!("{}", cnt);
-    }
     
 }

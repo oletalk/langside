@@ -1,0 +1,8 @@
+[package]
+name = "import-tunes"
+version = "0.1.0"
+authors = ["oletalk <oletalk@gmail.com>"]
+
+[dependencies]
+postgres = "0.14.0"
+clap = "2.23.1"

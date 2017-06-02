@@ -35,9 +35,12 @@ fn main() {
     let playlist_num_songs = playlist.len();
     println!("Your playlist has {} song(s)", &playlist_num_songs);
 
+    // 3. Open db and find songs in playlist in db (by path)
     let result = db::get_songs(playlist);
+
+    // 4. Report on number of playlist songs matching db
     match result.len().cmp(&playlist_num_songs) {
-        Ordering::Equal => println!("All songs matched."),
+        Ordering::Equal => println!("All songs matched!"),
         _ => println!("Your playlist matched {} song(s) in the database.", result.len())
     }
     for song in result {
@@ -52,9 +55,10 @@ fn main() {
         }
     };
     println!("Playlist name will be '{}'", playlist_name);
-    // 3. Open db and find songs in playlist in db (by path)
-    // 4. Report on number of playlist songs matching db
-    // 5. Check playlist name doesn't yet exist
+
+    // invocation so far: import-tunes -s ~/my-playlist.txt (assuming we are fine with the filename as playlist)
+
+    // 5. Check playlist name doesn't yet exist (or if we're updating with e.g. a batch job use -u)
     // 6. Save entry in playlist table
     // 7. Save playlist songs
 

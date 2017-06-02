@@ -34,10 +34,7 @@ fn all_songs() -> HashMap<String, Song> {
         let _path: String = row.get("song_filepath");
         let _hash: Option<String> = row.get("file_hash"); // can be null.
         let _artst: Option<String> = row.get("artist");
-        /* thread 'main' panicked at 'error retrieving column "artist": 
-               Conversion(Utf8Error { valid_up_to: 5 })', 
-               /Users/colin/.cargo/registry/src/github.com-1ecc6299db9ec823/postgres-0.14.0/src/rows.rs:206 
-        */
+        /* this can panic if your database data isn't UTF-8 */
         let _ttle: Option<String> = row.get("title");
         let _sec: i32 = row.get("secs");
         songs.insert(_path, Song{

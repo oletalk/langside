@@ -2,9 +2,11 @@
 extern crate clap;
 extern crate postgres;
 
+use std::cmp::Ordering;
 use clap::App;
 mod utils;
 mod db;
+mod fileread;
 
 // "use"" is just a namespace thing - we don't need it for our module
 fn main() {
@@ -25,18 +27,31 @@ fn main() {
     println!("{:?}", app_options);
 
     db::test_connection();
-    let playlist = vec![
-        "/opt/gulfport/mp3/ripped/James_Newton_Howard_-_San_Francisco.mp3".to_string(), 
-        "/opt/gulfport/mp3/vartmpnapshare/Amy Winehouse - What It Is About Men.mp3".to_string(),
-        "/opt/gulfport/mp3/vartmpnapshare/Billy Currington - 06 - Where The Girls Are.mp3".to_string(),
-        "/opt/gulfport/mp3/vartmpnapshare/D12 _ Eminem - Purple Pills.mp3".to_string(),
-        "/opt/gulfport/mp3/vartmpnapshare/Jennifer Lopez - Ain't It Funny.mp3".to_string()
-    ];
+
+    // 2. Read playlist (if playlist name not given in -p use file name)
+    let playlist_str = fileread::filecontents(app_options.source).unwrap();
+    let playlist: Vec<String> = playlist_str.lines().map( |s| s.to_owned()).collect();
+
+    let playlist_num_songs = playlist.len();
+    println!("Your playlist has {} song(s)", &playlist_num_songs);
+
     let result = db::get_songs(playlist);
+    match result.len().cmp(&playlist_num_songs) {
+        Ordering::Equal => println!("All songs matched."),
+        _ => println!("Your playlist matched {} song(s) in the database.", result.len())
+    }
     for song in result {
         println!("{:?}", song);
     }
-    // 2. Read playlist
+
+    let playlist_name = match app_options.playlistname {
+        Some(s) => s,
+        None => match fileread::file_shortname(app_options.source) {
+            Ok(n) => n,
+            Err(err) => panic!("Error: {}", err)
+        }
+    };
+    println!("Playlist name will be '{}'", playlist_name);
     // 3. Open db and find songs in playlist in db (by path)
     // 4. Report on number of playlist songs matching db
     // 5. Check playlist name doesn't yet exist

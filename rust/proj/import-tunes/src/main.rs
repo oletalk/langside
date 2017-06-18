@@ -4,9 +4,13 @@ extern crate postgres;
 
 use std::cmp::Ordering;
 use clap::App;
-mod utils;
-mod db;
-mod fileread;
+
+pub mod db;
+pub mod fileread;
+pub mod playlist;
+pub mod song;
+pub mod utils;
+pub mod consts;
 
 // "use"" is just a namespace thing - we don't need it for our module
 fn main() {
@@ -26,8 +30,6 @@ fn main() {
     let app_options = utils::process_args(&matches);
     println!("{:?}", app_options);
 
-    db::test_connection();
-
     // 2. Read playlist (if playlist name not given in -p use file name)
     let playlist_str = fileread::filecontents(app_options.source).unwrap();
     let playlist: Vec<String> = playlist_str.lines().map( |s| s.to_owned()).collect();
@@ -36,7 +38,7 @@ fn main() {
     println!("Your playlist has {} song(s)", &playlist_num_songs);
 
     // 3. Open db and find songs in playlist in db (by path)
-    let result = db::get_songs(playlist);
+    let result = playlist::get_songs(playlist);
 
     // 4. Report on number of playlist songs matching db
     match result.len().cmp(&playlist_num_songs) {
@@ -55,10 +57,14 @@ fn main() {
         }
     };
     println!("Playlist name will be '{}'", playlist_name);
-
-    // invocation so far: import-tunes -s ~/my-playlist.txt (assuming we are fine with the filename as playlist)
+    let sip = playlist::songs_in_playlist(playlist_name.to_owned());
 
     // 5. Check playlist name doesn't yet exist (or if we're updating with e.g. a batch job use -u)
+    if sip.len() > 0 {
+        println!("Playlist {} is not empty", playlist_name);
+    }
+    // invocation so far: import-tunes -s ~/my-playlist.txt (assuming we are fine with the filename as playlist)
+
     // 6. Save entry in playlist table
     // 7. Save playlist songs
 

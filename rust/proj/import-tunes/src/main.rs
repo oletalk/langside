@@ -3,6 +3,8 @@ extern crate clap;
 extern crate postgres;
 
 use std::cmp::Ordering;
+use std::process;
+
 use clap::App;
 
 pub mod db;
@@ -57,12 +59,27 @@ fn main() {
         }
     };
     println!("Playlist name will be '{}'", playlist_name);
-    let sip = playlist::songs_in_playlist(playlist_name.to_owned());
+    
 
     // 5. Check playlist name doesn't yet exist (or if we're updating with e.g. a batch job use -u)
-    if sip.len() > 0 {
-        println!("Playlist {} is not empty", playlist_name);
-    }
+    let sip = match playlist::find_playlist_id(playlist_name.to_owned()) {
+        None => {
+            match app_options.update {
+                false => {
+                    // create a playlist if not updating
+                    panic!("TODO not yet implemented new playlist create logic")
+                },
+                true => {
+                    // error out if updating (playlist doesn't exist)
+                    println!("ERROR: Cannot update a playlist that doesn't exist");
+                    process::exit(1)
+                }
+            }
+        },
+        Some(id) => id,
+    };
+
+    println!("Will save to playlist name {} id {} ...", playlist_name, sip);
     // invocation so far: import-tunes -s ~/my-playlist.txt (assuming we are fine with the filename as playlist)
 
     // 6. Save entry in playlist table

@@ -1,6 +1,6 @@
 use song::Song;
 use consts::db::{ALL_SONGS, SPECIFIC_PLS};
-use db::{fetch_songs, all_songs};
+use db::{fetch_songs, all_songs, get_playlist_id};
 
 use std::collections::HashMap;
 
@@ -9,6 +9,10 @@ pub fn songs_in_playlist(playlist: String) -> Vec<Song> {
     let song_res = fetch_songs(&sql, Some(playlist));
     let ret: Vec<Song> = song_res.iter().map(|(_, v)| v.clone()).collect();
     ret
+}
+
+pub fn find_playlist_id(playlist: String) -> Option<i32> {
+    get_playlist_id(playlist.as_str())
 }
 
 // Filter all songs in db against given (play)list of filenames

@@ -1,17 +1,34 @@
 use song::Song;
-use consts::db::{ALL_SONGS, DBURL, DB_TEST};
+use consts::db::{ALL_SONGS, DBURL, DB_TEST, FIND_PLAYLIST_NAME};
 
 use postgres::{Connection, TlsMode};
 use postgres::rows::Row;
 use std::collections::HashMap;
 
+pub fn get_playlist_id(playlist_name: &str) -> Option<i32> {
+    let mut ret : Option<i32> = None;
+    let conn = match Connection::connect(DBURL, TlsMode::None) {
+        Ok(c) => c,
+        Err(e) => panic!("Error connecting to the database: {:?}", e),
+    };
+
+    for row in &conn.query(FIND_PLAYLIST_NAME, &[&playlist_name]).unwrap() {
+        ret = Some(row.get("id"));
+    }
+    ret
+
+}
 
 pub fn all_songs() -> HashMap<String, Song> {
     fetch_songs(ALL_SONGS, None)
 }
 
 pub fn fetch_songs(sql: &str, playlist_name: Option<String>) -> HashMap<String, Song> {
-    let conn = Connection::connect(DBURL, TlsMode::None).unwrap();
+    let conn = match Connection::connect(DBURL, TlsMode::None) {
+        Ok(c) => c,
+        Err(e) => panic!("Error connecting to the database: {:?}", e),
+    };
+
     let mut songs = HashMap::new();
 
     match playlist_name {

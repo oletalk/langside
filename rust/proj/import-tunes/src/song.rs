@@ -1,9 +1,9 @@
 #[derive(Clone,Hash,Debug)]
 pub struct Song {
-    hash    : String,
-    artist  : String,
-    title   : String,
-    secs    : i32
+    pub hash    : String,
+    pub artist  : String,
+    pub title   : String,
+    pub secs    : i32
 }
 
 impl Song {
@@ -15,4 +15,5 @@ impl Song {
             secs: isecs
         }
     }
+
 }

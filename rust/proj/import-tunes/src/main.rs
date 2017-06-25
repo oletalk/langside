@@ -33,7 +33,13 @@ fn main() {
     println!("{:?}", app_options);
 
     // 2. Read playlist (if playlist name not given in -p use file name)
-    let playlist_str = fileread::filecontents(app_options.source).unwrap();
+    let playlist_str = match fileread::filecontents(app_options.source) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("Problem reading given playlist: {:?}", e);
+            process::exit(1)
+        }
+    };
     let playlist: Vec<String> = playlist_str.lines().map( |s| s.to_owned()).collect();
 
     let playlist_num_songs = playlist.len();
@@ -47,7 +53,7 @@ fn main() {
         Ordering::Equal => println!("All songs matched!"),
         _ => println!("Your playlist matched {} song(s) in the database.", result.len())
     }
-    for song in result {
+    for song in &result {
         println!("{:?}", song);
     }
 
@@ -62,12 +68,15 @@ fn main() {
     
 
     // 5. Check playlist name doesn't yet exist (or if we're updating with e.g. a batch job use -u)
-    let sip = match playlist::find_playlist_id(playlist_name.to_owned()) {
+    // 6. Save entry in playlist table
+    // 7. Save playlist songs
+
+    let list_id = match playlist::find_playlist_id(playlist_name.to_owned()) {
         None => {
             match app_options.update {
                 false => {
                     // create a playlist if not updating
-                    panic!("TODO not yet implemented new playlist create logic")
+                    playlist::create_new_playlist(playlist_name)
                 },
                 true => {
                     // error out if updating (playlist doesn't exist)
@@ -76,14 +85,20 @@ fn main() {
                 }
             }
         },
-        Some(id) => id,
+        Some(id) => {
+            match app_options.update {
+                false => {
+                    // error out if playlist exists but update not specified
+                    println!("ERROR: You need to specify update (-u) if playlist already exists");
+                    process::exit(1)
+                },
+                true => { id }
+            }
+        }
     };
 
-    println!("Will save to playlist name {} id {} ...", playlist_name, sip);
+    println!("Will save to playlist name {} id {} ...", playlist_name, list_id);
+    playlist::save_playlist(list_id, result);
     // invocation so far: import-tunes -s ~/my-playlist.txt (assuming we are fine with the filename as playlist)
-
-    // 6. Save entry in playlist table
-    // 7. Save playlist songs
-
-    
+    // TODO - proper logging
 }

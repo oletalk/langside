@@ -30,7 +30,9 @@ fn main() {
                     )
                     .get_matches();
     let app_options = utils::process_args(&matches);
-    println!("{:?}", app_options);
+    if app_options.verbose {
+        println!("{:?}", app_options);
+    }
 
     // 2. Read playlist (if playlist name not given in -p use file name)
     let playlist_str = match fileread::filecontents(app_options.source) {
@@ -43,7 +45,9 @@ fn main() {
     let playlist: Vec<String> = playlist_str.lines().map( |s| s.to_owned()).collect();
 
     let playlist_num_songs = playlist.len();
-    println!("Your playlist has {} song(s)", &playlist_num_songs);
+    if app_options.verbose {
+        println!("Your playlist has {} song(s)", &playlist_num_songs);
+    }
 
     // 3. Open db and find songs in playlist in db (by path)
     let result = playlist::get_songs(playlist);
@@ -53,8 +57,10 @@ fn main() {
         Ordering::Equal => println!("All songs matched!"),
         _ => println!("Your playlist matched {} song(s) in the database.", result.len())
     }
-    for song in &result {
-        println!("{:?}", song);
+    if app_options.verbose {
+        for song in &result {
+            println!("{:?}", song);
+        }
     }
 
     let playlist_name = match app_options.playlistname {
@@ -64,7 +70,9 @@ fn main() {
             Err(err) => panic!("Error: {}", err)
         }
     };
-    println!("Playlist name will be '{}'", playlist_name);
+    if app_options.verbose {
+        println!("Playlist name will be '{}'", playlist_name);
+    }
     
 
     // 5. Check playlist name doesn't yet exist (or if we're updating with e.g. a batch job use -u)
@@ -97,7 +105,9 @@ fn main() {
         }
     };
 
-    println!("Will save to playlist name {} id {} ...", playlist_name, list_id);
+    if app_options.verbose {
+        println!("Will save to playlist name {} id {} ...", playlist_name, list_id);
+    }
     playlist::save_playlist(list_id, result);
     // invocation so far: import-tunes -s ~/my-playlist.txt (assuming we are fine with the filename as playlist)
     // TODO - proper logging
